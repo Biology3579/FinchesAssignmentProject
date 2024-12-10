@@ -1,0 +1,367 @@
+---
+title: "Dynamic Documents for Reproducible Research using R and Quarto Intro"
+date: 2024-08-23
+format: html
+execute:
+  echo: true
+editor: visual
+---
+
+## Introduction
+
+Natural selection is a fundamental mechanism of evolutionary change, driving the adaptation of organisms to their environments. In birds, behavioral and physiological flexibility, often through phenotypic plasticity, plays a crucial role in meeting environmental challenges. However, their typically long generation times and low reproductive rates can constrain their ability to respond to rapid environmental changes. The medium ground finch (Geospiza fortis) on Daphne Major provides a striking example of intense natural selection over a short timeframe, driven by severe environmental pressures.
+
+From 1975 to 1978, researchers conducted extensive fieldwork to study G. fortis on Daphne Major. By banding birds, measuring external morphological traits, and documenting ecological variables such as rainfall and seed abundance, they were able to track changes in the population. During this period, a severe drought in 1977 had profound effects on the finch population. Rainfall during the wet season dropped to just 24 mm, compared to 127 mm in 1976 and 137 mm in 1978. This drastic reduction in rainfall caused a sharp decline in seed abundance, leading to a dramatic 85% population decline in G. fortis. Notably, the decline was correlated with seed scarcity, with smaller birds unable to adapt to the reduced availability of small seeds. Surviving birds exhibited a shift in feeding behavior, consuming larger and harder seeds that smaller birds could not process efficiently.
+
+The drought’s impact extended beyond survival and feeding behavior. Morphological analysis revealed that the birds surviving into 1978 were significantly larger than those that perished, suggesting size-related survival advantages. Furthermore, the data demonstrated a skewed sex ratio, favoring males, and revealed that almost none of the juveniles banded in 1976 survived to 1978. The heritable nature of key morphological traits supports the inference of natural selection, with larger beak size and body size conferring advantages in accessing scarce food resources during the drought.
+
+This study provides a compelling case of natural selection acting over a single generation, emphasizing the role of environmental pressures in shaping the traits of a population. By examining the morphological and ecological responses of G. fortis to the 1977 drought, we can gain valuable insights into the dynamics of adaptation and survival in the face of environmental change
+
+Talk about selection and the poatterns expected from selxtion pressures - i.e. towards a reduced variaboi.ity in beak size. 
+
+
+## Hypotheses and Rationale 
+
+In this This document is intended to analyse the impact of drought on finches, specifically examining the changes in beak depth over two years (1976 and 1978) to see if natural selection played a role in shaping these traits in response to environmental pressures.
+
+
+As a result of the drought, the food availability of the island was shown to significant drop []. This meant that, in order to survive, birds would have to change their feeding habits. For G. frotis, a way to do this was to eat the larger, harder seeds that were usually ignored by this species (given the high enegretic costs in comaprson to the smaller seeds []). However, only the largest individuals with the largest breask would be able to access these. As such, I hypothesise that the populations of finches before and after will have different beak sizes, with those measured in 1978 showcasing larger beak depths. 
+Additionally, in order to assess storng sleective pressures, i hypotheisse that the populaton of finches will show a reduced 
+This is because we might expect that if there are strong selective pressures, then the might be a narrower range of beak_depths after the drought than before, perhaps showing evidence of directional selection.
+Given the ... I hypothesise that the variability of beak sizes will be reduced post-frougth as ...
+
+## Methods
+
+The data comes from ... They measured individuals of the medium ground finch (Geospiza fortis) on the Galapagos Island of Daphne Major. The data that Will be analysed are a subset of the more general data set colected in thsi study, specifically: beak depths (height of the beak at its base) of 89 finches caught the year before the drought (1976) and 89 finches captured the year after the drought (1978).
+
+I used this dataset to analyse the change in beak depth before and after the drpight. First, I converted the year to a factor with two levels sp that ... and clean up the data fro ease of analysis. I created some exploratory figures, and then used a Welch two sample t-test to compare the beak depths of both independetn popualtions of finches before and afetr the dorught. 
+    I will perform a Welch two-sample t-test to compare the mean beak depth between 1976 and 1978. The Welch t-test is chosen because it is robust to unequal variances between the two groups (heteroscedasticity). This test will allow us to determine if there is a significant difference in mean beak depth between the two years. Since the two groups are not paire, I will be carryign an unpaired t-test.
+I analysed the confidecne intervals to ... Lastly i tested the differece in variances between both groups to assess whetehr or not they changed that coudl indictae a storng seleciton pressure.
+    Levene’s Test for Equality of Variances: To assess whether the variance of beak depth differs between the two years, I will use Levene’s Test. This test is more robust to non-normality and will help us determine whether the spread of beak depth values in 1976 differs from 1978, which could indicate selective pressures that affect variability in beak size.
+
+## Analysis
+
+### Packages
+
+All the necessary packages are store in the renv.lock file. The renv package manages the isolated environment for your R project, so the package versions are specific to the project rather than being installed globally. When you run renv::restore(), it will install the packages as described in the renv.lock file, ensuring that you and anyone else using the project have the same versions of the necessary packages. This process will make your project environment easily reproducible across different systems.
+
+Note: install renv package (install.packages("renv") if not already installed.
+
+```{r}
+renv::restore() #to load up the necessary packages.
+```
+
+### Load and save data
+
+```{r}
+#| label: load-&-save-data
+
+# To write data to csv
+write.csv(case0201, here("data", "finches_raw.csv"))
+
+# Load data 
+finches_raw <- read.csv(here("data","finches_raw.csv"))
+```
+
+### Preliminaries
+
+Quick overview of the dataset use `glimpse()` and `summary()`. These functions help you quickly understand the structure, data types, and summary statistics of your raw dataset. They may reveal data quality issues, such as inappropriate data types (e.g., Year stored as an integer when it should be a factor), missing values, or outliers.
+
+```{r}
+#| label: preliminaries
+
+glimpse(finches_raw) # quick glimpse of data
+summary(finches_raw)# summary statistics per group??
+```
+
+By examining the full dataset and the summaries, we can see that the dataset is structured in three columns providing information about the beak depth of individual finches in 1976 and 1978. The X column is an integer variable that uniquely identifies each bird. The Year column is currently stored as an integer, representing the years 1976 and 1978, before and after the drouhgt (respectively). Finally, the Depth column is a numeric variable representing the beak depth of each bird in millimeters, which serves as the primary response variable. The dataset appears to be balanced, as it contains an equal number of observations (178 in total) across these two groups.
+
+### Cleaning and save data
+
+Althoguh the overall stuircture fo the data is appropaite for analysis (long format), there are several transforamtiosn that we cna do to the data to ease the analysis.
+
+1.  change the names to make them more clairty
+2.  change the variable sturctures to make it more meaningful for our analsysis
+
+We will do this with a pipe fucntion:
+
+```{r}
+#| label: clean-&-save-data
+
+# Cleaning data pipe 
+finches_clean <- finches_raw %>%
+  mutate( #Convert 'Year' to a factor with levels 1976 and 1978
+    Year = factor(Year, levels = c(1976, 1978))
+  ) %>%
+  rename( #Rename columns for clarity
+    year = Year,
+    bird_id = X,
+    beak_depth_mm = Depth
+  )
+glimpse(finches_clean) # check relevant changes to structure and names
+
+# Save the clean data
+write_csv(finches_clean, here("data", "finches_clean.csv"))
+```
+
+For the rest of the analysis we will be using the saved data
+
+### Exploratory plot
+
+Before performing any statistical tests, it’s important to visualize the data. - What type of variation occurs within my variables? - What type of covariation occurs between my variables?
+
+First of all I will use a boxplot to look at the raw data for beak depth before (1976) and after (1978) the drought, to display ...
+
+Figure 1: Exploratory boxplot
+
+```{r}
+#| label: exploratory-boxplot
+
+# Source the plotting functions
+source(here::here("functions", "plotting.R"))
+
+#Defining color scheme for each year
+year_colour <- c(
+  "1976" = "#E7B800", # Blue for 1976 (before the drought)
+  "1978" = "#FC4E07")  # Orange for 1978 (after the drought)
+
+# Call the plotting function
+exploratory_boxplot <- plot_exploratory_boxplot (
+  data = finches_clean,       # Dataset
+  x_col = "year",             # Grouping column for x-axis
+  y_col = "beak_depth_mm",    # Response variable for y-axis
+  color_map = year_colour,    # Color mapping
+  x_label = "Year",           # Label for x-axis
+  y_label = "Beak Depth (mm)" # Label for y-axis
+)
+
+print(exploratory_boxplot) # Print the boxplot
+```
+
+-- I am not sure what would be better vertical or horizontal?? \*\* also should I start the axes at 0 or is starting at 6mm?? --
+
+```{r}
+
+# Define color map for the years
+year_color_map <- c(
+  "1976" = "#E7B800",  # Yellow for 1976
+  "1978" = "#FC4E07"   # Orange for 1978
+)
+
+# Create the plot
+ggplot(data = finches_clean, aes(x = beak_depth_mm, y = year)) +
+  
+  # Boxplot layer with no fill color (only outline with color)
+  geom_boxplot(aes(color = year), 
+               width = 0.5, 
+               show.legend = FALSE) + 
+  
+  # Jitter for regular points (non-outliers)
+  geom_jitter(aes(color = year), 
+              position = position_jitter(width = 0.2, height = 0.2),  # Adjust width and height for a narrower spread
+              alpha = 0.4, 
+              shape = 16,  # Solid points
+              size = 3,    # Size of the points
+              stroke = 0,  # Remove point borders
+              show.legend = FALSE) +  # Regular points with no border
+  
+  # Apply custom color scheme
+  scale_color_manual(values = year_color_map) +  # Apply color map
+  
+  # Labels and Titles
+  labs(
+    x = "Beak Depth (mm)",  # Label for x-axis
+    y = "Year",             # Label for y-axis
+    title = "Beak Depths of Darwin's Finches by Year"  # Title of the plot
+  ) +
+  
+  # Classic theme for a cleaner look
+  theme_classic() +  
+  
+  # Customize the theme (fonts, axis labels)
+  theme(
+    axis.title = element_text(size = 12),  # Font size for axis titles
+    axis.text = element_text(size = 10),   # Font size for tick labels
+    plot.title = element_text(size = 14, face = "bold")  # Title style
+  )
+
+```
+
+From this plot, we observe that in 1978, the mean beak depth is larger. However, there is also significant variation (spread) in both years. From the boxplot alone, it's not possible to determine whether the observed differences are statistically significant.
+
+-- are there any other exploratory plots I should include? --
+
+### Testing the Differences in Mean Beak Depth Between Years
+
+First, I will perform the t-test comparing the beak depth between 1976 and 1978 and extract the important statistical values like the p-value, confidence intervals, and other relevant information.
+
+```{r}
+#| label: t-test
+
+# Relevel the 'year' variable to ensure 1978 is the reference level
+finches_clean$year <- relevel(finches_clean$year, ref = "1978")
+
+# Run the t-test between 1976 and 1978 for beak depth
+t_test_result <- t.test(beak_depth_mm ~ factor(year), data = finches_clean)
+
+print(t_test_result)
+
+```
+
+#### Diagnostic plots
+
+I will then asses if the assumptions of the normality and heteroscedasticity of the residuals hold by generating diagnostic plots.
+
+We will generate: Residuals vs Fitted Plot: This checks for heteroscedasticity. Normal Q-Q Plot: This checks for normality.
+
+Note: while this can also be doen using the base r, I have decided to use these for aesthetics and ease of interpretation.
+
+```{r}
+#| label: diagnostic-plots
+
+# Extract group means
+mean_1976 <- mean(finches_clean$beak_depth_mm[finches_clean$year == "1976"])
+mean_1978 <- mean(finches_clean$beak_depth_mm[finches_clean$year == "1978"])
+
+# Calculate residuals manually by subtracting the group mean from each observation
+residuals <- ifelse(finches_clean$year == "1976", finches_clean$beak_depth_mm - mean_1976, 
+                    finches_clean$beak_depth_mm - mean_1978)
+
+# Now we can use these residuals for diagnostic plots
+fitted_values <- ifelse(finches_clean$year == "1976", mean_1976, mean_1978)  # Fitted values are the group means
+
+# 1. Residuals vs Fitted Plot (Heteroscedasticity Check)
+resid_vs_fitted <- ggplot(data = data.frame(fitted = fitted_values, residuals = residuals), 
+                          aes(x = fitted, y = residuals)) +
+  geom_point(alpha = 0.5) +
+  geom_hline(yintercept = 0, color = "red") +
+  labs(x = "Fitted Values", y = "Residuals", title = "Residuals vs Fitted") +
+  theme_minimal()
+
+# 2. Normal Q-Q Plot (Normality Check)
+qq_plot <- ggplot(data = data.frame(residuals = residuals), aes(sample = residuals)) +
+  geom_qq() +
+  geom_qq_line(color = "red") +
+  labs(title = "Normal Q-Q Plot") +
+  theme_minimal()
+
+
+# Arrange the plots into a multi-panel figure
+grid.arrange(resid_vs_fitted, qq_plot, nrow = 1 )
+
+```
+
+From the plots we can see that there is deviation from the line which means that there is a violation of the assumption for normality. However, since there is a large sample size and the Welch is robust violations of the normality assumption, I will still be performing the test, whilst noting this violation.
+
+### Differences in variances between both years ???
+
+Levene's test is used to assess whether the variances between the two groups (1976 and 1978 in this case) are equal. It is particularly useful when the assumption of normality is not met, as it is more robust to violations of normality.
+
+```{r}
+
+# Levene's test for equality of variances
+levene_test <- leveneTest(beak_depth_mm ~ year, data = finches_clean)
+print(levene_test)
+
+```
+
+## Results
+
+### Table of main stats
+
+Table 1: ...
+
+| Statistic | 1976 | 1978 | Difference (1978 - 1976) | t-Statistic | p-value | 95% Confidence Interval | Levene's p-value |
+|---------|---------|---------|---------|---------|---------|---------|---------|
+| Mean Beak Depth (mm) | 9.47 | 10.14 | 0.67 | 4.58 | 8.65e-06 | (0.41, 0.94) | 0.212 |
+| Variance | \[Var1\] | \[Var2\] | \- | \- | \- | \- | \- |
+
+-- shoudl i add the variance??
+
+### Beak depth increased after the drought
+
+Figure 2:...
+
+```{r}
+# Source the plotting functions
+source(here::here("functions", "plotting.R"))
+
+# Defining color scheme for each year
+year_colour <- c(
+  "1976" = "#E7B800", # Yellow for 1976 (before the drought)
+  "1978" = "#FC4E07"  # Orange for 1978 (after the drought)
+)
+
+# Call the plotting function
+result_boxplot <- plot_boxplot_t.test(
+  data = finches_clean,       # Dataset
+  x_col = "year",             # Grouping column for x-axis
+  y_col = "beak_depth_mm",    # Response variable for y-axis
+  color_map = year_colour,    # Color mapping
+  x_label = "Year",           # Label for x-axis
+  y_label = "Beak Depth (mm)" # Label for y-axis
+)
+
+# Print the result
+print(result_boxplot)  # This will display the plot with the p-value annotation
+
+```
+
+-- shoudl i incldue this? --
+
+```{r}
+# Relevel year to make 1976 the reference level
+finches_clean$year <- relevel(finches_clean$year, ref = "1976")
+
+# Fit the linear model (using factor(year) as a predictor)
+lm_beak <- lm(beak_depth_mm ~ factor(year), data = finches_clean)
+
+# Load the necessary library for the coefficient plot
+library(dotwhisker)
+
+# Create the coefficient plot
+dwplot(lm_beak) +
+  theme_classic() +
+  labs(
+    title = "Difference in Beak Depth Between 1976 and 1978",
+    x = "Mean Difference in Beak Depth (mm)",
+    caption = "95% Confidence Interval"
+  ) +
+  scale_y_discrete(labels = element_blank()) +  # Remove y-axis labels
+  theme(
+    axis.text = element_text(size = 12),
+    plot.title = element_text(hjust = 0.5, size = 14),
+    axis.title.x = element_text(size = 12),
+    axis.title.y = element_blank(),  # Remove y-axis title
+    axis.text.y = element_blank(),   # Remove y-axis text
+    axis.ticks.y = element_blank(),  # Remove y-axis ticks
+    legend.position = "none",        # Remove legend
+    panel.border = element_blank()   # Remove the vertical line (panel border)
+  ) +
+  scale_x_continuous(
+    limits = c(0, 1),  # Adjust x-axis range to start from 0
+    breaks = seq(0, 1, by = 0.2)  # Adjust x-axis breaks for better spacing
+  )
+
+```
+
+Table 1 and Figure 2 show a significant difference in mean beak depth between 1976 and 1978. The Welch two-sample t-test revealed a t-value of 4.58 with 172.98 degrees of freedom and a p-value of 8.739e-06, indicating a statistically significant difference between the two years. The 95% confidence interval for the difference in means ranged from 0.38 to 0.96, suggesting that the true difference in mean beak depth is likely within this range. The average beak depth in 1978 was 10.14 mm, compared to 9.47 mm in 1976.
+
+### Variance in beak depth decreased ...
+
+Figure 3: ?? -- coudl this be a good figure to represent the variances or do i skip this altogtehr\|? ---
+
+```{r}
+library(see)
+ggplot(finches_clean, aes(x = year, y = beak_depth_mm, fill = year)) +
+  geom_violindot(fill_dots = "black") +
+  theme_modern() +
+  scale_fill_material_d()
+```
+
+Table 1 and Figure 3 Since the p-value (0.2449) is greater than the significance level of 0.05, we fail to reject the null hypothesis. This suggests that there is no significant difference in the variances of beak depth between 1976 and 1978.
+
+## Conclusions (unfinished)
+
+There is suggestive but inconclusive evidence of a difference between the mean humerus length of survivors and the mean humerus length of nonsurvivors (two-sided p-value = .08 from a two-sample t-test). The mean length is estimated to be 0.010 inches greater in survivors than in nonsurvivors (95% confidence interval from -0.001 to +0.021 inches).
+
