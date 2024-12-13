@@ -1,132 +1,158 @@
-## Key Info ----
-##
-## Script name: Plotting.r
+# Script name: plotting.R
 ##
 ## Purpose of script: 
-##      # A file of functions for plotting the Sleuth3 case 0201 dataset
+##    A collection of functions for generating figures for the finches beak size 
+##    analysis and saving them appropriately.
+##    This ensures that the main analysis file is de-cluttered and runs smoothly.
 ##
-## Date Created: 01/2024
+## Author: Biology3579
 ##
+## Date Created: 2024-10-01 
 ##
-##
-##
-## Notes:
-##   This file ...
-##
-##
+## ---------------------------
 
+# Required packages
+library(ggplot2)
+library(dplyr)
+library(ggsignif)
+library(broom)
+library(svglite)
 
-# Explanatory box plot ---- 
+# Defining custom color palettes and custom shapes for each species of penguin ----
+year_colours <- c(
+    "1976" = "#E7B800", 
+    "1978" = "#FC4E07")
 
-
-# Function to create an exploratory boxplot
-plot_exploratory_boxplot <- function(data, x_col, y_col, color_map, x_label = "Year", y_label = "Beak Depth (mm)") {
-  library(ggplot2)
+# Function to create exploratory boxplot of beak depths across the two years ----
+plot_exploratory_boxplot <- function(data) {
   
-  ggplot(
-    data = data,
-    aes_string(x = x_col, y = y_col)) + # Use aes_string for dynamic column names
-    geom_boxplot(aes_string(color = x_col), 
-                 width = 0.5, 
-                 show.legend = FALSE) + 
-    geom_jitter(aes_string(color = x_col), 
-                 alpha = 0.4, 
-                 show.legend = FALSE, 
-                 position = position_jitter(width = 0.2, seed = 0),
-                 shape = 16, # solid points
-                 size = 3,   # size of the points
-                 stroke = 0) +  # Set stroke to 0 to remove point borders
-    scale_color_manual(values = color_map) + 
-    labs(
-      x= "Year",
-      y = "Beak Depth (mm)"
-    ) +
-    theme_classic()
-}
-
-# Function to create a boxplot with p-value from t-test and significance levels (without jitter)
-plot_boxplot_t.test <- function(data, x_col, y_col, color_map, x_label = "Year", y_label = "Beak Depth (mm)") {
-  library(ggplot2)
-  library(ggpubr)  # For stat_compare_means
-  # Relevel the 'year' factor to ensure 1976 appears before 1978
-  data[[x_col]] <- factor(data[[x_col]], levels = c("1976", "1978"))
-  
-  # Perform the t-test
-  t_test_result <- t.test(as.formula(paste(y_col, "~", x_col)), data = data)
-  
-  # Get the exact p-value
-  p_value <- t_test_result$p.value
-  
-  # Print the exact p-value (check the value)
-  print(p_value)
-  
-  # Create the plot
-  ggplot(
-    data = data,
-    aes_string(x = x_col, y = y_col)
-  ) + 
-    geom_boxplot(aes_string(color = x_col), width = 0.5, show.legend = FALSE) +
-    scale_color_manual(values = color_map) + 
-    labs(x = x_label, y = y_label) +
-    stat_compare_means(comparisons = list(c("1976", "1978")), 
-                       label = "p.signif", label.y = max(data[[y_col]]) + 1) + 
-    # Display the exact p-value without rounding
-    annotate("text", x = 1.5, y = max(data[[y_col]]) + 2, 
-             label = paste("p-value =", format(p_value, scientific = TRUE)), 
-             size = 5, color = "black") +
-    theme_classic()
+  # Define data and axes
+  ggplot(data = finches_clean, 
+         aes(x = year,             # Define x-axis
+             y = beak_depth_mm)) + # Define y-axis
+    
+    # Boxplot for bill depth
+    geom_boxplot(aes(
+      color = year),          # Year-specific colour
+      width = 0.5) +          # Width of the boxplot
+    
+    # Plot all individual data points
+    geom_jitter(aes(
+      color = year,        # Year-specific colour
+      alpha = 0.3,         # Transparency of the points
+      size = 4),           # Size of the jittered points
+      position = position_jitter(width = 0.2, # Jitter width
+                                 seed = 0)) + # Ensures reproducible in random variation in point placement 
+    
+    # Apply custom colours
+    scale_color_manual(values = year_colours) +
+    
+    # Axes labels 
+    labs(x = "Year",
+         y = "Beak Depth (mm)") + 
+    
+    # Themes, sizes, and positioning
+    theme_minimal() + 
+    theme(
+      axis.title.x = element_text(size = 13), # Size of x-axis label
+      axis.title.y = element_text(size = 13), # Size of y-axis label
+      axis.text.x = element_text(size = 12),  # Size of x-axis values
+      axis.text.y = element_text(size = 12),  # Size of x-axis values
+      legend.position = "none")
 }
 
 
-# Function to create a boxplot with p-value from t-test and significance levels (without jitter)
-plot_boxplot_CI <- function(data, x_col, y_col, color_map, x_label = "Year", y_label = "Beak Depth (mm)") {
-  library(ggplot2)
-  library(ggpubr)  # For stat_compare_means
-
-  # Relevel the 'year' factor to ensure 1976 appears before 1978
-  data[[x_col]] <- factor(data[[x_col]], levels = c("1976", "1978"))
-  
-  # Perform the t-test
-  t_test_result <- t.test(as.formula(paste(y_col, "~", x_col)), data = data)
-  
-  # Get the means and the confidence interval for the difference
-  mean_1976 <- mean(data[[y_col]][data[[x_col]] == "1976"])
-  mean_1978 <- mean(data[[y_col]][data[[x_col]] == "1978"])
-  
-  # Confidence interval for the difference
-  conf_int <- t_test_result$conf.int
-  
-  # Calculate the difference in means
-  mean_diff <- mean_1978 - mean_1976
-  
-  # Create the boxplot
-  boxplot <- ggplot(data = data, aes_string(x = x_col, y = y_col)) + 
-    geom_boxplot(aes_string(color = x_col), width = 0.5, show.legend = FALSE) +
-    scale_color_manual(values = color_map) + 
-    labs(x = x_label, y = y_label) +
-    stat_compare_means(comparisons = list(c("1976", "1978")), label = "p.signif", label.y = max(data[[y_col]]) + 1) +
-    annotate("text", x = 1.5, y = max(data[[y_col]]) + 2, label = paste("p-value =", format(t_test_result$p.value, scientific = TRUE)), size = 5, color = "black") +
-    theme_classic()
-  
-  # Plot the mean difference with 95% CI
-  mean_diff_plot <- ggplot(data = data.frame(mean_diff = mean_diff, 
-                                             conf_low = conf_int[1],
-                                             conf_high = conf_int[2]),
-                           aes(x = 1, y = mean_diff)) +
-    geom_pointrange(aes(ymin = conf_low, ymax = conf_high), 
-                    color = "red", 
-                    size = 1, 
-                    shape = 16) + 
-    scale_x_continuous(breaks = NULL) +  # Hide x-axis
-    labs(x = "", y = "Difference in Beak Depth (mm)") +
-    theme_classic() +
-    theme(axis.title.x = element_blank(),
-          axis.text.x = element_blank(),
-          axis.ticks.x = element_blank()) + 
-    ggtitle("Difference in Mean Beak Depth (1978 - 1976)")  # Title for the plot
-  
-  # Print both the boxplot and the mean difference plot
-  print(boxplot)
-  print(mean_diff_plot)
+# Function to plot diagnostic plots ----
+plot_diagnostics <- function(model) {
+  par(mfrow = c(1, 2), mar = c(6, 4, 2, 1))   # Set up the plotting layout
+  plot(model, 1)  # Plot residuals vs fitted values
+  plot(model, 2)  # Plot Q-Q plot for residuals
 }
 
+
+# Function to create a model summary table with only relevant values (effect size, p-value, and confidence intervals) ----
+generate_summary_table <- function(linear_model, term_label, p_value_label, conf_lower_label, conf_upper_label, effect_size_label) {
+  
+  # Extract the model summary and confidence intervals
+  model_summary <- broom::tidy(linear_model, conf.int = TRUE)
+  
+  # Filter out the Intercept (comparing only between years) and extract relevant stats
+  year_comparison_row <- model_summary %>%
+    filter(term == "year1978") %>%
+    select(term, estimate, p.value, conf.low, conf.high) # Select relevant stats
+  
+  # Clean the table to match your needs and label appropriately
+  cleaned_table <- year_comparison_row %>%
+    mutate(
+      term = term_label,  # Set custom term label
+      p.value = round(p.value, 3),      # Round p-value for clarity
+      conf.low = round(conf.low, 3),    # Round lower CI for clarity
+      conf.high = round(conf.high, 3),  # Round upper CI for clarity
+      effect_size = round(estimate, 3)  # Round effect size for clarity
+    ) %>%
+    rename(
+      "Year_Effect" = term,      # Rename the 'term' column to 'Year_Effect
+      # !! enables dynamic references to column names stored in variables to ensure they are interpretted correctly
+      !!p_value_label := p.value,        # Rename p-value
+      !!conf_lower_label := conf.low,    # Rename conf.low
+      !!conf_upper_label := conf.high,   # Rename conf.high
+      !!effect_size_label := effect_size # Rename effect_size
+    ) %>%
+    # Select specific columns based on the renamed labels
+    select(Year_Effect, !!effect_size_label, !!p_value_label, !!conf_lower_label, !!conf_upper_label)
+  
+  return(cleaned_table)
+}
+
+
+# Function to create exploratory boxplot of beak depths across the two years with significance annotations ----
+plot_results_boxplot <- function(data) {
+  
+  # Define data and axes
+  ggplot(data = finches_clean, 
+         aes(x = year, 
+             y = beak_depth_mm)) +
+    
+    # Boxplot for beak depth
+    geom_boxplot(aes(
+      color = year,           # Year-specific colour
+      fill = year),           # Year-specific colour fill
+      width = 0.5,            # Width of the boxplot
+      alpha = 0.5) +          # Transparency of fill
+    
+    # Add significance levels 
+    geom_signif(comparisons = list(c("1976", "1978")),  # Compare 1976 vs 1978
+                annotations = c("***"),                 # Significance stars for the comparison
+                y_position = 12,                        # Adjust the y-position based on your data range
+                tip_length = 0.01) +                    # Short tip lines for neatness
+    
+    # Apply custom colours
+    scale_color_manual(values = year_colours) + # Boxplot outline
+    scale_fill_manual(values = year_colours) +  # Boxplot fill
+    
+    # Axes labels 
+    labs(x = "Year",
+         y = "Beak Depth (mm)") + 
+    
+    # Themes, sizes, and positioning
+    theme_minimal() + 
+    theme(
+      axis.title.x = element_text(size = 13), # Size of x-axis label
+      axis.title.y = element_text(size = 13), # Size of y-axis label
+      axis.text.x = element_text(size = 12),  # Size of x-axis values
+      axis.text.y = element_text(size = 12),  # Size of x-axis values
+      legend.position = "none")
+}
+
+# Function to save figures as svg (vector) files ----
+save_plot_svg <- function(data, filename, size, scaling, plot_function){ # Features to define in the function
+  
+  size_inches = size / 2.54  # Convert size from cm to inches
+  svglite(filename, width = size_inches, height = size_inches, scaling = scaling)
+  
+  # Plot the respective figure based on the passed plot_function
+  plot <- plot_function(data)  # Call the appropriate plot function (e.g., results_plot_1, results_plot_2, etc.)
+  print(plot)  # Print the plot to save it
+  
+  dev.off()  # Close the device (save the plot)
+}
