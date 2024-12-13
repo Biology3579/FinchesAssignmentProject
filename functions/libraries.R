@@ -1,4 +1,4 @@
-## Script name: plotting.R
+## Script name: libraries.R
 ##
 ## Purpose of script: 
 ##    A function to load all necessary libraries for finches beak size 
