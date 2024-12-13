@@ -55,6 +55,7 @@ renv::restore()
 ```{r}
 #| label: packages
 #| warning: false
+#| message: false
 # Source library loading fucntion
 source(here::here("functions", "libraries.R"))
 # Load necessary libraries
