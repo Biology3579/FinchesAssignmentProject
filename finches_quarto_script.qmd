@@ -1,6 +1,6 @@
 ---
 title: "Dynamic Documents for Reproducible Research using R and Quarto Intro"
-date: 2024-08-23
+date: 2024-12-13
 format: html
 execute:
   echo: true
@@ -29,10 +29,13 @@ To investigate the effect of the 1977 drought on the beak depth of *G. fortis* f
 Notably, the linear model relies on certain assumptions, including homoscedasticity (constant variance of residuals) and the normality of residuals. 
 
 To assess these assumptions, I will first visually inspect diagnostic plots: 
-- A Residuals vs. Fitted plot is used to assess homoscedasticity, which assumes that the variance of residuals is constant across all levels of the fitted values. A random scatter of points around zero (no discernible pattern) would suggests that the homoscedasticity assumption is met.
-- A Normal Q-Q plot is evaluate whether the residuals follow a normal distribution. If the residuals are normally distributed, the points would closely follow the diagonal line in the plot.
+
+- A Residuals vs. Fitted plot will be used to assess homoscedasticity, which assumes that the variance of residuals is constant across all levels of the fitted values. A random scatter of points around zero (no discernible pattern) would suggests that the homoscedasticity assumption is met.
+
+- A Normal Q-Q plot will be used to evaluate whether the residuals follow a normal distribution. If the residuals are normally distributed, the points would closely follow the diagonal line in the plot.
 
 I will also conduct formal statistical tests: 
+
 - A Levene’s test will be used to test the assumption of homoscedasticity. This test evaluates whether the variance of the residuals is constant across groups.
 
 - A Shapiro-Wilk test will be applied to assess the normality of the residuals. A significant result (p-value < 0.05) would suggest that the residuals are not normally distributed.
@@ -41,17 +44,17 @@ By evaluating these assumptions, I aim to strengthen the reliability and interpr
 
 ## Analysis
 
-:::Important note:
-*Comprehensive instructions, including all prerequisites and detailed guidelines for running this analysis and relevant code, are available in the README file of my [GitHub repository](https://github.com/Biology3579/FinchesAssignmentProject.git) for this project. Please refer to the README to ensure proper setup and usage.*
-:::
+
+*Important note: Comprehensive instructions, including all prerequisites and detailed guidelines for running this analysis and relevant code, are available in the README file of my [GitHub repository](https://github.com/Biology3579/FinchesAssignmentProject.git) for this project. Please refer to the README to ensure proper setup and usage.*
 
 ```{r}
 #| label: renv-restore
 renv::restore()
 ```
 
-```{r, warning=FALSE}
+```{r}
 #| label: packages
+#| warning: false
 # Source library loading fucntion
 source(here::here("functions", "libraries.R"))
 # Load necessary libraries
@@ -117,7 +120,7 @@ The distribution of beak depth in finches before (1976) and after (1978) the dro
 
 ### Statistical analysis
 
-A linear model will be employed to evaluate the effect of the drought on beak depth.
+A linear model is be employed to evaluate the effect of the drought on beak depth.
 In this model, "year" is treated as the explanatory variable, while "beak_depth_mm" is the response variable.
 
 ```{r}
